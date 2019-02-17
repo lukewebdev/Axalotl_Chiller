@@ -1,3 +1,14 @@
+//Goal is to keep water between 16 and 18 *C
+//CONFIGURATION  - TWEAK THESE IF NEEDED
+float temp_target = 16.00; //Degrees Celsius
+float temp_delta = 1.00; //one degree C variation
+float temp_alarm_threshold = 4;
+//CODE, DONT CHANGE UNLESS YOU KNOW WHY AND HAVE TESTED RESULT BEFORE USING FOR LIVE ANIMALS
+#define CHILLER D0
+#define PUMP D1
+#define BUZZER D2
+
+
 // which analog pin to connect
 #define THERMISTORPIN A0         
 // resistance at 25 degrees C
@@ -10,17 +21,59 @@
 // The beta coefficient of the thermistor (usually 3000-4000)
 #define BCOEFFICIENT 3950
 // the value of the 'other' resistor
-#define SERIESRESISTOR 100000    
+#define SERIESRESISTOR 100000   
+ 
  
 uint16_t samples[NUMSAMPLES];
  
 void setup(void) {
   Serial.begin(9600);
+  pinMode(CHILLER, OUTPUT);
+  pinMode(PUMP, OUTPUT);
+  pinMode(BUZZER,OUTPUT);
   //analogReference(EXTERNAL);
 }
  
 void loop(void) {
-  uint8_t i;
+  float temp = getTemp();
+  if(temp > temp_target){
+    Serial.println("Too hot! Turning on Chiller and pump");
+    digitalWrite(CHILLER, LOW);
+    digitalWrite(PUMP, LOW);
+    if(temp >= temp_alarm_threshold + temp_target){
+      Serial.print("Red Alert! Temps way too high! Sound the alarm! Current temp: ");
+      Serial.print(temp);
+      Serial.println(" *C");
+      alarm();
+    }
+    
+  }else{
+    Serial.println("Not too hot. Turning off Chiller and pump");
+    digitalWrite(CHILLER, HIGH);
+    digitalWrite(PUMP, HIGH);
+  }
+ delay(1000);
+}
+
+void alarm(){
+  for(int i = 200;i <= 800;i++) //frequence loop from 200 to 800
+  {
+    tone(BUZZER,i); //turn the buzzer on
+    delay(5); //wait for 5 milliseconds 
+  }
+  delay(4000); //wait for 4 seconds on highest frequence
+  for(int i = 800;i >= 200;i--)//frequence loop from 800 downto 200
+  {
+    tone(BUZZER,i);
+    delay(10);
+  }
+}
+
+bool isChillerOn(){
+  return !digitalRead(CHILLER);
+}
+float getTemp(){
+    uint8_t i;
   float average;
  
   // take N samples in a row, with a slight delay
@@ -56,6 +109,6 @@ void loop(void) {
   Serial.print("Temperature "); 
   Serial.print(steinhart);
   Serial.println(" *C");
- 
-  delay(1000);
-}
+
+  return steinhart;
+ }
