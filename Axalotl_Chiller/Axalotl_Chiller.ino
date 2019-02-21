@@ -44,10 +44,18 @@ void loop(void) {
       Serial.print("Red Alert! Temps way too high! Sound the alarm! Current temp: ");
       Serial.print(temp);
       Serial.println(" *C");
-      alarm();
+      Serial.println("  ");
+      alarmHot();
     }
     
   }else{
+    if(temp <= temp_alarm_threshold - temp_target){
+      Serial.print("Blue Alert! Temps way too Low! Sound the alarm! Current temp: ");
+      Serial.print(temp);
+      Serial.println(" *C");
+      Serial.println("  ");
+      alarmCold();
+    }    
     Serial.println("Not too hot. Turning off Chiller and pump");
     digitalWrite(CHILLER, HIGH);
     digitalWrite(PUMP, HIGH);
@@ -55,20 +63,35 @@ void loop(void) {
  delay(1000);
 }
 
-void alarm(){
-  for(int i = 200;i <= 800;i++) //frequence loop from 200 to 800
+void alarmHot(){
+  for(int i = 500;i <= 800;i++) //frequence loop from 200 to 800
   {
     tone(BUZZER,i); //turn the buzzer on
     delay(5); //wait for 5 milliseconds 
   }
-  delay(4000); //wait for 4 seconds on highest frequence
-  for(int i = 800;i >= 200;i--)//frequence loop from 800 downto 200
+  delay(5000); //wait for 4 seconds on highest frequence
+  for(int i = 800;i >= 500;i--)//frequence loop from 800 downto 200
   {
     tone(BUZZER,i);
-    delay(10);
+    delay(5);
   }
 }
 
+
+void alarmCold(){
+  for(int i = 200;i <= 800;i++) //frequence loop from 200 to 800
+  {
+    tone(BUZZER,i); //turn the buzzer on
+    delay(2); //wait for 5 milliseconds 
+  }
+  delay(500); //wait for 4 seconds on highest frequence
+  for(int i = 800;i >= 200;i--)//frequence loop from 800 downto 200
+  {
+    tone(BUZZER,i);
+    delay(2);
+  }
+  delay(5000); //wait for 4 seconds on highest frequence
+}
 bool isChillerOn(){
   return !digitalRead(CHILLER);
 }
